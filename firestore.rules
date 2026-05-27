@@ -1,0 +1,121 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: users
+    // Fields: uid, email, displayName, photoURL, preferences, role
+    //
+    // Collection: saved_trips
+    // Fields: userId, name, createdDate, formData, itinerary
+    //
+    // Collection: services
+    // Fields: providerName, category, city, description, price, rating, contact, imageUrl, userId, createdAt
+    //
+    // Collection: bnb_listings
+    // Fields: hostName, hostId, city, title, description, pricePerNight, image, rating, createdAt
+    //
+    // Collection: forum_posts
+    // Fields: authorId, authorName, title, content, category, createdAt, likes
+    //
+    // ===============================================================
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() &&
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+          (request.auth.token.email == "admin@xrankflow.com" && request.auth.token.email_verified == true));
+    }
+
+    function hasOnlyAllowedFields(fields) {
+      return request.resource.data.keys().hasOnly(fields);
+    }
+
+    function isValidEmail(email) {
+      return email is string && email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
+    }
+
+    // ===============================================================
+    // Domain Validators
+    // ===============================================================
+    function isValidUser(data) {
+      return hasOnlyAllowedFields(['uid', 'email', 'displayName', 'photoURL', 'preferences', 'role']) &&
+             data.uid is string && data.email is string && isValidEmail(data.email);
+    }
+
+    function isValidSavedTrip(data) {
+      return hasOnlyAllowedFields(['userId', 'name', 'createdDate', 'formData', 'itinerary']) &&
+             data.userId is string && data.name is string;
+    }
+
+    function isValidService(data) {
+      return hasOnlyAllowedFields(['providerName', 'category', 'city', 'description', 'price', 'rating', 'contact', 'imageUrl', 'userId', 'createdAt']) &&
+             data.userId is string && data.providerName is string && data.price is number;
+    }
+
+    function isValidBnB(data) {
+      return hasOnlyAllowedFields(['hostName', 'hostId', 'city', 'title', 'description', 'pricePerNight', 'image', 'rating', 'createdAt', 'reviews']) &&
+             data.hostId is string && data.hostName is string && data.pricePerNight is number;
+    }
+
+    function isValidForumPost(data) {
+      return hasOnlyAllowedFields(['authorId', 'authorName', 'title', 'content', 'category', 'createdAt', 'likes']) &&
+             data.authorId is string && data.authorName is string && data.title is string;
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+
+    match /users/{userId} {
+      allow read: if isOwner(userId) || isAdmin();
+      allow create: if isAuthenticated() && isValidUser(request.resource.data) && (isOwner(userId) || isAdmin());
+      allow update: if isAuthenticated() && isValidUser(request.resource.data) && (isOwner(userId) || isAdmin());
+      allow delete: if isAdmin();
+    }
+
+    match /saved_trips/{tripId} {
+      allow read: if isAuthenticated() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isAuthenticated() && isValidSavedTrip(request.resource.data) && (request.resource.data.userId == request.auth.uid || isAdmin());
+      allow update: if isAuthenticated() && isValidSavedTrip(request.resource.data) && (resource.data.userId == request.auth.uid || isAdmin());
+      allow delete: if isAuthenticated() && (resource.data.userId == request.auth.uid || isAdmin());
+    }
+
+    match /services/{serviceId} {
+      allow read: if true; // Publicly readable
+      allow create: if isAuthenticated() && isValidService(request.resource.data) && (request.resource.data.userId == request.auth.uid || isAdmin());
+      allow update: if isAuthenticated() && isValidService(request.resource.data) && (resource.data.userId == request.auth.uid || isAdmin());
+      allow delete: if isAuthenticated() && (resource.data.userId == request.auth.uid || isAdmin());
+    }
+
+    match /bnb_listings/{bnbId} {
+      allow read: if true; // Publicly readable
+      allow create: if isAuthenticated() && isValidBnB(request.resource.data) && (request.resource.data.hostId == request.auth.uid || isAdmin());
+      allow update: if isAuthenticated() && isValidBnB(request.resource.data) && (resource.data.hostId == request.auth.uid || isAdmin());
+      allow delete: if isAuthenticated() && (resource.data.hostId == request.auth.uid || isAdmin());
+    }
+
+    match /forum_posts/{postId} {
+      allow read: if true; // Publicly readable
+      allow create: if isAuthenticated() && isValidForumPost(request.resource.data) && (request.resource.data.authorId == request.auth.uid || isAdmin());
+      allow update: if isAuthenticated() && isValidForumPost(request.resource.data) && (resource.data.authorId == request.auth.uid || isAdmin());
+      allow delete: if isAuthenticated() && (resource.data.authorId == request.auth.uid || isAdmin());
+    }
+
+    match /test/connection {
+      allow read: if true;
+    }
+  }
+}

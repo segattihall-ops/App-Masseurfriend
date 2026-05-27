@@ -1,0 +1,85 @@
+{
+  "entities": {
+    "ServiceListing": {
+      "title": "Service Listing",
+      "description": "A service provider ad in the marketplace",
+      "type": "object",
+      "properties": {
+        "providerName": { "type": "string", "description": "Name of the service provider" },
+        "category": { "type": "string", "enum": ["Barber", "Nail", "Wax", "Food Prep", "Studio Rental", "Other"], "description": "Type of service" },
+        "city": { "type": "string", "description": "City where the service is offered" },
+        "description": { "type": "string", "description": "Detailed description of the service" },
+        "price": { "type": "number", "description": "Starting price for the service" },
+        "rating": { "type": "number", "description": "Average rating of the provider" },
+        "contact": { "type": "string", "description": "Contact information (email or phone)" },
+        "imageUrl": { "type": "string", "description": "URL of the service photo" },
+        "userId": { "type": "string", "description": "Firebase UID of the provider who created the ad" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Timestamp when the ad was created" }
+      },
+      "required": ["providerName", "category", "city", "description", "price", "contact", "userId", "createdAt"]
+    },
+    "ForumPost": {
+      "title": "Forum Post",
+      "description": "A post in the community forum",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string", "description": "Title of the post" },
+        "content": { "type": "string", "description": "Content of the post" },
+        "authorName": { "type": "string", "description": "Display name of the author" },
+        "authorId": { "type": "string", "description": "Firebase UID of the author" },
+        "category": { "type": "string", "description": "Category of the post" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Timestamp when the post was created" },
+        "likes": { "type": "number", "description": "Number of likes" }
+      },
+      "required": ["title", "content", "authorName", "authorId", "category", "createdAt"]
+    },
+    "BnBListing": {
+      "title": "BnB Listing",
+      "description": "A professional space listing for masseurs",
+      "type": "object",
+      "properties": {
+        "hostName": { "type": "string", "description": "Name of the host" },
+        "hostId": { "type": "string", "description": "Firebase UID of the host" },
+        "city": { "type": "string", "description": "City where the space is located" },
+        "title": { "type": "string", "description": "Title of the listing" },
+        "description": { "type": "string", "description": "Detailed description of the space" },
+        "pricePerNight": { "type": "number", "description": "Price per night" },
+        "image": { "type": "string", "description": "URL of the space photo" },
+        "rating": { "type": "number", "description": "Average rating of the space" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Timestamp when the listing was created" }
+      },
+      "required": ["hostName", "hostId", "city", "title", "pricePerNight", "createdAt"]
+    },
+    "SavedTrip": {
+      "title": "Saved Trip",
+      "description": "A trip saved by a user",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "Firebase UID of the user who saved the trip" },
+        "name": { "type": "string", "description": "Name of the trip" },
+        "createdDate": { "type": "string", "format": "date-time", "description": "Timestamp when the trip was saved" },
+        "formData": { "type": "object", "description": "Form data used to generate the trip" },
+        "itinerary": { "type": "object", "description": "Generated itinerary for the trip" }
+      },
+      "required": ["userId", "name", "createdDate", "formData", "itinerary"]
+    }
+  },
+  "firestore": {
+    "/services": {
+      "schema": "ServiceListing",
+      "description": "Collection of service marketplace ads"
+    },
+    "/forum_posts": {
+      "schema": "ForumPost",
+      "description": "Collection of community forum posts"
+    },
+    "/bnb_listings": {
+      "schema": "BnBListing",
+      "description": "Collection of Masseur B&B listings"
+    },
+    "/saved_trips": {
+      "schema": "SavedTrip",
+      "description": "Collection of trips saved by users"
+    }
+  }
+}

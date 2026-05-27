@@ -1,0 +1,7 @@
+{
+  "name": "Road Trip Pro",
+  "description": "AI-powered strategic road trip planner with 10x intelligence, future market forecasting, and real-time AI chat assistance.",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}
